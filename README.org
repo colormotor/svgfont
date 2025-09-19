@@ -1,0 +1,68 @@
+#+title: SVGfont Python
+
+* Load SVG-fonts as NumPy polylines
+Svgfont is a lightweight Python library that loads [[https://www.w3.org/TR/SVG11/fonts.html][SVG fonts]] as sequences of polylines. The polylines are represented as 2d numpy arrays (Nx2), each having N points.
+
+The main use for this is to load [[https://en.wikipedia.org/wiki/Hershey_fonts][Hershey fonts]] for drawing with a plotter, robot or CNC machine. The library comes with some standard Hershey fonts bundled, and a curated list of fonts can be found [[https://gitlab.com/oskay/svg-fonts][here]].
+
+The functionality of the Svgfont library is similar to the [[https://www.evilmadscientist.com/2011/hershey-text-an-inkscape-extension-for-engraving-fonts/][Hershey extension]] for the [[https://inkscape.org][InkScape]] vector drawing program, but this library allows you to easily load these kind fonts in any Python script.
+** Install with PIP (TODO)
+#+begin_example
+pip install svgfont
+#+end_example
+
+** Install locally
+Clone the repository, navigate to the directory and from there
+#+begin_example
+pip install -e .
+#+end_example
+
+** Examples
+A simple use case is:
+#+BEGIN_SRC jupyter-python :session py :exports code :file figures/hershey-base.png
+import svgfont
+import matplotlib.pyplot as plt
+
+font = svgfont.load_font('TwinSans', tol=0.5)
+polylines = svgfont.text_polylines('Hello World', font, 20, pos=[50,20]) # pos is optional
+plt.figure(figsize=(6,3))
+for P in polylines:
+    plt.plot(P[:,0], P[:,1], 'k')
+plt.axis('equal')
+plt.gca().invert_yaxis()
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+[[file:figures/hershey-base.png]]
+
+#+begin_export md
+![img](https://raw.githubusercontent.com/colormotor/svgfont/main/figures/hershey-base.png)
+#+end_export
+
+The ~tol~ parameter is optional and it determines the maximum error for sampling the Bezier curves that compose each character.
+
+You can also fit the text to a rectangle (with optional padding) as follows:
+#+BEGIN_SRC jupyter-python :session py :exports code :file figures/hershey-box.png
+import svgfont
+import matplotlib.pyplot as plt
+from matplotlib import patches
+
+w, h = 200, 100
+font = svgfont.load_font('HersheyScript1')
+polylines = svgfont.text_polylines('Hello World', font, box=svgfont.rect(0, 0, w, h), padding=10)
+plt.figure(figsize=(6,3))
+for P in polylines:
+    plt.plot(P[:,0], P[:,1], 'k')
+plt.gca().add_patch(patches.Rectangle((0, 0), w, h, fill=False, edgecolor='r'))
+plt.axis('equal')
+plt.gca().invert_yaxis()
+plt.show()
+#+END_SRC
+
+#+RESULTS:
+[[file:figures/hershey-box.png]]
+
+#+begin_export md
+![img](https://raw.githubusercontent.com/colormotor/svgfont/main/figures/hershey-box.png)
+#+end_export
