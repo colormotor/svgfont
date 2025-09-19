@@ -1,4 +1,6 @@
 #+title: SVGfont Python
+#+PROPERTY: header-args:jupyter-python :session py :kernel python3
+
 
 * Load SVG-fonts as NumPy polylines
 Svgfont is a lightweight Python library that loads [[https://www.w3.org/TR/SVG11/fonts.html][SVG fonts]] as sequences of polylines. The polylines are represented as 2d numpy arrays (Nx2), each having N points.
