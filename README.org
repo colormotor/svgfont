@@ -66,3 +66,6 @@ plt.show()
 #+begin_export md
 ![img](https://raw.githubusercontent.com/colormotor/svgfont/main/figures/hershey-box.png)
 #+end_export
+
+These examples use the Hershey fonts [[https://github.com/colormotor/svgfont/tree/main/svgfont/hershey][bundled with the library]], but a path to a
+SVG font file can be provided also.

@@ -1,14 +1,14 @@
 
 # Table of Contents
 
-1.  [Load SVG-fonts as NumPy polylines](#org669287d)
-    1.  [Install with PIP (TODO)](#org85a5f86)
-    2.  [Install locally](#org94d5ec0)
-    3.  [Examples](#orgab3b351)
+1.  [Load SVG-fonts as NumPy polylines](#org48f106f)
+    1.  [Install with PIP (TODO)](#orgcf32c3a)
+    2.  [Install locally](#org9176846)
+    3.  [Examples](#org85de8cf)
 
 
 
-<a id="org669287d"></a>
+<a id="org48f106f"></a>
 
 # Load SVG-fonts as NumPy polylines
 
@@ -19,14 +19,14 @@ The main use for this is to load [Hershey fonts](https://en.wikipedia.org/wiki/H
 The functionality of the Svgfont library is similar to the [Hershey extension](https://www.evilmadscientist.com/2011/hershey-text-an-inkscape-extension-for-engraving-fonts/) for the [InkScape](https://inkscape.org) vector drawing program, but this library allows you to easily load these kind fonts in any Python script.
 
 
-<a id="org85a5f86"></a>
+<a id="orgcf32c3a"></a>
 
 ## Install with PIP (TODO)
 
     pip install svgfont
 
 
-<a id="org94d5ec0"></a>
+<a id="org9176846"></a>
 
 ## Install locally
 
@@ -35,7 +35,7 @@ Clone the repository, navigate to the directory and from there
     pip install -e .
 
 
-<a id="orgab3b351"></a>
+<a id="org85de8cf"></a>
 
 ## Examples
 
@@ -75,4 +75,7 @@ You can also fit the text to a rectangle (with optional padding) as follows:
     plt.show()
 
 ![img](https://raw.githubusercontent.com/colormotor/svgfont/main/figures/hershey-box.png)
+
+These examples use the Hershey fonts [bundled with the library](https://github.com/colormotor/svgfont/tree/main/svgfont/hershey), but a path to a
+SVG font file can be provided also.
 
