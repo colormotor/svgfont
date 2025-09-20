@@ -3,4 +3,8 @@
 # from importlib import reload
 # reload(svgfont)
 
-from .svgfont import load_font, text_polylines, rect, transform_to_rect
+from .svgfont import (load_font,
+                      rect,
+                      transform_to_rect,
+                      text_paths,
+                      text_width)

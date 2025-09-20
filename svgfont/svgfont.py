@@ -24,16 +24,15 @@ import os
 
 class Glyph:
     """Glyph of a SVG font"""
-
-    def __init__(self, ch, adv, polylines):
+    def __init__(self, ch, adv, beziers):
         self.ch = ch
         self.adv = float(adv)
-        self.polylines = polylines
+        #self.polylines = polylines
+        self.beziers = beziers
 
 
 class Font:
     """A SVG font"""
-
     def __init__(self, family, units_per_em, glyphs, missing):
         self.family = family or ""
         self.units_per_em = float(units_per_em)
@@ -50,7 +49,7 @@ class Font:
 
 def load_font(svg_font_file, tol=0.5):
     """
-    Load an SVG `<font>` and convert each glyph outline into polylines.
+    Load an SVG `<font>` and convert each glyph outline into sequences of cubic Bezier curves.
     If `svg_font_file` does not end with “.svg”, it is resolved to a bundled font
     under `…/hershey/<name>.svg`.
 
@@ -102,8 +101,9 @@ def load_font(svg_font_file, tol=0.5):
             path = svg.parse_path(d)
             paths = split_compound_path(path)
             adv = float(mg.get("horiz-adv-x", str(default_adv)))
-            polylines = [path_to_polyline(path, tol) for path in paths]
-            missing = Glyph(None, adv, polylines)
+            beziers = [path_to_bezier_chain(path) for path in paths]
+            #polylines = [sample_bezier_chain(Cp, tol) for Cp in beziers]
+            missing = Glyph(None, adv, beziers)
 
     glyph_elems = (
         font_elem.findall("svg:glyph", ns) if ns else font_elem.findall("glyph")
@@ -118,21 +118,46 @@ def load_font(svg_font_file, tol=0.5):
         if d:
             path = svg.parse_path(d)
             paths = split_compound_path(path)
-            polylines = [path_to_polyline(path, tol) for path in paths]
-        glyphs[uni] = Glyph(uni, adv, polylines)
+            beziers = [path_to_bezier_chain(path) for path in paths]
+            #polylines = [sample_bezier_chain(Cp, tol) for Cp in beziers]
+
+        glyphs[uni] = Glyph(uni, adv, beziers)
 
     return Font(family, units_per_em, glyphs, missing)
 
 
-def text_polylines(
+
+def text_width(text, font, size=1.0, letter_spacing=0.0, line_height=1.25):
+    if type(font) == str:
+        font = load_font(font, **kwargs)
+
+    s = size / font.units_per_em
+    x, y = 0, 0
+    out = []
+    w = 0
+    for ch in text:
+        if ch == "\n":
+            x = pos[0]
+            y -= line_height * size
+            continue
+
+        g = font.get(ch)
+        x += (g.adv * s) + letter_spacing
+        w = max(w, x - letter_spacing)
+    return w
+
+
+def text_paths(
     text,
     font,
     size=1.0,
     pos=[0, 0],
     box=None,
     padding=0,
+    align="left",
     letter_spacing=0.0,
-    line_height=1.25,
+    line_height=1.0,
+    tol=0.1,
     **kwargs,
 ):
     """Geneate text as a list of polylines
@@ -142,6 +167,11 @@ def text_polylines(
     starting position `pos`. If `box` is given, the resulting polylines are
     uniformly transformed to fit inside the rectangle (optionally padded
     according to `padding`).
+
+    By default this function does adaptive sampling of the glyph Bezier curves,
+    which will give straight segments for initially linear segments. If the
+    `tol` parameter is set to zero, the function will return Bezier chains, i.e.
+    sequences of cubic Bezier control points.
 
     Args:
         text (str):
@@ -164,6 +194,10 @@ def text_polylines(
         line_height (float, default 1.25):
             Line spacing as a multiple of `size`. Each newline moves the baseline
             by `line_height * size` in the negative Y direction.
+        tol (float, default 0.5): Maximum geometric deviation used when flattening
+            curves to polylines, expressed in **font units** (smaller = more segments, higher fidelity).
+            If `0.0`, returns Bezier control points
+
         **kwargs:
             Extra keyword arguments forwarded to `load_font` when `font` is a string
             (e.g., `tol=...`).
@@ -175,27 +209,38 @@ def text_polylines(
             start/end point).
 
     """
-    if type(font)==str:
+    if type(font) == str:
         font = load_font(font, **kwargs)
 
     s = size / font.units_per_em
     x, y = pos
     out = []
 
-    for ch in text:
-        if ch == "\n":
-            x = 0.0
-            y -= line_height * size
-            continue
+    lines = text.splitlines()
 
-        g = font.get(ch)
-        if g.polylines:
-            for P in g.polylines:
-                PP = P * s
-                PP = PP + [x, y]
-                out.append(PP)
+    for i, line in enumerate(lines):
+        if align == "left":
+            x = pos[0]
+        else:
+            w = text_width(line, font, size, letter_spacing, line_height)
+            if align == "center":
+                x = pos[0] - w / 2
+            else:
+                x = pos[0] - w
 
-        x += (g.adv * s) + letter_spacing
+        y = pos[1] + (line_height * size) * i
+        for ch in line:
+            g = font.get(ch)
+            if g.beziers:
+                for P in g.beziers:
+                    PP = P * s
+                    PP = PP + [x, y]
+                    if tol > 0:
+                        out.append(sample_bezier_chain(PP, tol))
+                    else:
+                        out.append(PP)
+
+            x += (g.adv * s) + letter_spacing
 
     if box is not None:
         out = transform_to_rect(out, box, padding)
@@ -299,6 +344,7 @@ def decasteljau(pts, bez, tol, level=0):
 
 
 def sample_bezier_chain(Cp, tol):
+    ''' Sample a Bezier chain using Decasteljau's method'''
     Cp = np.array(Cp)
     pts = [Cp[0]]
     for i in range(0, len(Cp) - 1, 3):
@@ -530,6 +576,7 @@ def scaling_2d(xy, affine=True):
     m[0, 0] = xy[0]
     m[1, 1] = xy[1]
 
+
 def rect_in_rect_transform(src, dst, padding=0.0, axis=None):
     """Return homogeneous transformation matrix that fits src rect into dst"""
     fitted = rect_in_rect(src, dst, padding, axis)
@@ -592,4 +639,9 @@ def scaling_2d(xy, affine=True):
 
 
 def is_number(x):
+    return isinstance(x, numbers.Number)
+
+
+def is_number(x):
+    return isinstance(x, numbers.Number)
     return isinstance(x, numbers.Number)
