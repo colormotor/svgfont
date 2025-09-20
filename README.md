@@ -1,14 +1,14 @@
 
 # Table of Contents
 
-1.  [Load SVG-fonts as NumPy polylines](#org6a6e168)
-    1.  [Install with PIP (TODO)](#orgc2ddd91)
-    2.  [Install locally](#org99ef478)
-    3.  [Examples](#org3530b4f)
+1.  [Load SVG-fonts as NumPy polylines](#org1fca4d9)
+    1.  [Install with PIP (TODO)](#orgc598b95)
+    2.  [Install locally](#org8a0349c)
+    3.  [Examples](#org6cb7195)
 
 
 
-<a id="org6a6e168"></a>
+<a id="org1fca4d9"></a>
 
 # Load SVG-fonts as NumPy polylines
 
@@ -19,14 +19,14 @@ The main use for this is to load [Hershey fonts](https://en.wikipedia.org/wiki/H
 The functionality of the Svgfont library is similar to the [Hershey extension](https://www.evilmadscientist.com/2011/hershey-text-an-inkscape-extension-for-engraving-fonts/) for the [InkScape](https://inkscape.org) vector drawing program, but this library allows you to easily load these kind fonts in any Python script.
 
 
-<a id="orgc2ddd91"></a>
+<a id="orgc598b95"></a>
 
 ## Install with PIP (TODO)
 
     pip install svgfont
 
 
-<a id="org99ef478"></a>
+<a id="org8a0349c"></a>
 
 ## Install locally
 
@@ -35,7 +35,7 @@ Clone the repository, navigate to the directory and from there
     pip install -e .
 
 
-<a id="org3530b4f"></a>
+<a id="org6cb7195"></a>
 
 ## Examples
 
@@ -44,10 +44,13 @@ A simple use case is:
     import svgfont
     import matplotlib.pyplot as plt
     
-    font = svgfont.load_font('TwinSans', tol=0.5)
-    polylines = svgfont.text_polylines('Hello World', font, 20, pos=[50,20]) # pos is optional
+    font = svgfont.load_font('TwinSans')
+    paths = svgfont.text_paths('Hello\nWorld', font, 20,
+                               align='center',
+                               pos=[50,20],
+                               tol=0.1) # pos is optional
     plt.figure(figsize=(6,3))
-    for P in polylines:
+    for P in paths:
         plt.plot(P[:,0], P[:,1], 'k')
     plt.axis('equal')
     plt.gca().invert_yaxis()
@@ -65,9 +68,9 @@ You can also fit the text to a rectangle (with optional padding) as follows:
     
     w, h = 200, 100
     font = svgfont.load_font('HersheyScript1')
-    polylines = svgfont.text_polylines('Hello World', font, box=svgfont.rect(0, 0, w, h), padding=10)
+    paths = svgfont.text_paths('Hello World', font, box=svgfont.rect(0, 0, w, h), padding=10)
     plt.figure(figsize=(6,3))
-    for P in polylines:
+    for P in paths:
         plt.plot(P[:,0], P[:,1], 'k')
     plt.gca().add_patch(patches.Rectangle((0, 0), w, h, fill=False, edgecolor='r'))
     plt.axis('equal')
