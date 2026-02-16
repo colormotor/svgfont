@@ -158,6 +158,7 @@ def text_paths(
     letter_spacing=0.0,
     line_height=1.0,
     tol=0.1,
+    merge=True,
     **kwargs,
 ):
     """Geneate text as a list of polylines
@@ -231,19 +232,30 @@ def text_paths(
         y = pos[1] + (line_height * size) * i
         for ch in line:
             g = font.get(ch)
+            gpaths = []
             if g.beziers:
                 for P in g.beziers:
                     PP = P * s
                     PP = PP + [x, y]
                     if tol > 0:
-                        out.append(sample_bezier_chain(PP, tol))
+                        gpaths.append(sample_bezier_chain(PP, tol))
                     else:
-                        out.append(PP)
+                        gpaths.append(PP)
+            if merge:
+                out += gpaths
+            else:
+                out.append(gpaths)
 
             x += (g.adv * s) + letter_spacing
 
+            
     if box is not None:
-        out = transform_to_rect(out, box, padding)
+        if merge:
+            out = transform_to_rect(out, box, padding)
+        else:
+            srcbox = bounding_box(sum(out, []))
+            mat = rect_in_rect_transform(srcbox, box, padding=padding)
+            out = [[affine_transform_polyline(mat, P) for P in S] for S in out]
 
     return out
 
