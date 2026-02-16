@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "svgfont"
-version = "0.1.5"
+version = "0.1.6"
 description = "Load svg fonts"
 readme = "README.md"
 license = { file = "LICENSE" }

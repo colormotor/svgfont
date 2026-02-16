@@ -40,11 +40,11 @@ class Font:
         self.glyphs = glyphs or {}
         self.missing = missing
 
-    def get(self, ch):
+    def get(self, ch, size=0):
         g = self.glyphs.get(ch)
         if g is not None:
             return g
-        return self.missing if self.missing is not None else Glyph(None, 0.0, [])
+        return self.missing if self.missing is not None else Glyph(None, size, [])
 
 
 def load_font(svg_font_file, tol=0.5):
@@ -230,7 +230,7 @@ def text_paths(
 
         y = pos[1] + (line_height * size) * i
         for ch in line:
-            g = font.get(ch)
+            g = font.get(ch, size)
             if g.beziers:
                 for P in g.beziers:
                     PP = P * s
